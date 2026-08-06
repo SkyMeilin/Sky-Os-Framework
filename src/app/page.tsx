@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ [
               <pre className="text-xs overflow-auto p-3 rounded bg-black/[.05] dark:bg-white/[.06]">{JSON.stringify(me, null, 2)}</pre>
             ) : (
               <p className="text-sm text-black/70 dark:text-white/70">
-                Click "Login with Fanvue" to authenticate and we will display your current user from the Fanvue API.
+                Click &quot;Login with Fanvue&quot; to authenticate and we will display your current user from the Fanvue API.
               </p>
             )}
           </div>
