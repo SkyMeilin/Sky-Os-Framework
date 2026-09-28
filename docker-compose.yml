@@ -1,0 +1,48 @@
+version: '3.8'
+
+networks:
+  skyos-network:
+    driver: bridge
+
+services:
+  # 1. Lokales Web-Chat-Interface (UI/UX) auf Port 7860
+  skyos-chat:
+    image: python:3.11-slim
+    container_name: skyos_chat_ui
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: python chat_interface.py
+    ports:
+      - "7860:7860"
+    networks:
+      - skyos-network
+
+  # 2. MCP-Bridge für die mobile Gemini-Anbindung auf Port 8001
+  skyos-mcp:
+    image: python:3.11-slim
+    container_name: skyos_mcp_bridge
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: uvicorn mcp_server:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    networks:
+      - skyos-network
+
+  # 3. Sovereign Payment Gateway (PayPal, Venmo, Revolut) auf Port 8002
+  skyos-payment:
+    image: python:3.11-slim
+    container_name: skyos_payment_gateway
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: uvicorn payment_gateway:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    networks:
+      - skyos-network
