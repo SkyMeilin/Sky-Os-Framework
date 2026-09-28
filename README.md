@@ -1,6 +1,6 @@
 # Sky OS – Das Framework
 
-**Sky OS – Das Framework** ist ein 100 % freies, lokales, quelloffenes und rechtlich sicheres Multi-Agenten-Betriebssystem. Es läuft als isolierter Digital Twin auf lokaler Hardware (Lenovo ThinkPad unter WSL) und verbindet kompromisslose Datensouveränität mit modernster Automatisierung.
+**Sky OS – Das Framework** ist ein 100 % freies, lokales, quelloffenes und rechtlich sicheres Multi-Agenten-Betriebssystem.  auf lokaler Hardware und verbindet kompromisslose Datensouveränität mit modernster Automatisierung.
 
 ---
 
