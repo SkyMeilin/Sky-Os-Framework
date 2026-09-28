@@ -1,157 +1,43 @@
-# Fanvue App Starter (Next.js App Router)
+# Sky OS – Das Framework
 
-## Requirements
+**Sky OS – Das Framework** ist ein 100 % freies, lokales, quelloffenes und rechtlich sicheres Multi-Agenten-Betriebssystem. Es läuft als isolierter Digital Twin auf lokaler Hardware (Lenovo ThinkPad unter WSL) und verbindet kompromisslose Datensouveränität mit modernster Automatisierung.
 
-- pnpm
-- Node 18+
-- An existing Fanvue App from [Fanvue Developer Area](https://fanvue.com/developers/apps) (client id/secret)
+---
 
-## Setup
+## 🏛️ Die 15 Departments (Das organisatorische Rückgrat)
+Das System ist in 15 spezialisierte Fachbereiche unterteilt, die jeweils von einem virtuellen "Sky-Leader" und integrierter MCP+CIP-Logik gesteuert werden:
+1. **Executive Leadership** (Sky-EXE Leader) – Strategie & Ressourcen
+2. **Account Management** (Sky-ACC Leader) – Kunden & Onboarding
+3. **Strategy & Planning** (Sky-STR Leader) – Marktanalysen & Roadmaps
+4. **Creative Department** (Sky-CRE Leader) – Design & visuelle Konsistenz
+5. **Content Marketing** (Sky-CON Leader) – Inhalte & Funnel-Distribution
+6. **SEO** (Sky-SEO Leader) – Suchmaschinenoptimierung
+7. **Paid Media/PPC** (Sky-PAI Leader) – Kampagnen & ROAS
+8. **Social Media Management** (Sky-SOC Leader) – Social-Präsenz & Cadence
+9. **Email Marketing** (Sky-EMA Leader) – Sequenzen & Deliverability
+10. **Analytics/BI** (Sky-ANA Leader) – KPIs & Predictive Modeling
+11. **Development** (Sky-DEV Leader) – Code, Tests & Sicherheit
+12. **Operations/Admin** (Sky-OPE Leader) – Buchhaltung & Compliance
+13. **Media Buying** (Sky-MED Leader) – Verhandlungen & Budgetierung
+14. **Community Management** (Sky-COM Leader) – Moderation & Member Journey
+15. **Project Management** (Sky-PRO Leader) – Koordination & Zeitpläne
 
-1. Create `.env.local` using `.env.example`
+---
 
-2. Install deps and run:
+## 🛡️ Sicherheit & Architektur
+* **Offline-First Digital Twin:** Keine ungewollten Cloud-Abhängigkeiten; alle Daten bleiben auf deiner Festplatte.
+* **Quantensicheres Audit-Ledger (`quantum_ledger.py`):** Jede Transaktion, jeder Befehl und jedes Event wird per **SHA3-256** in einer unveränderbaren Hash-Kette mathematisch versiegelt.
+* **Sovereign Payment Gateway:** Direkte, eigenständige Webhook-Anbindungen für **PayPal, Venmo und Revolut** ohne versteckte Zwischenhändler.
+* **Dual-Interface:** Wahlfreiheit zwischen dem lokalen Web-Chat-Interface (Port `7860`) und der mobilen Anbindung per MCP-Brücke (Port `8001`).
 
-```bash
-pnpm install
-pnpm dev
-```
+---
 
-3. Set up HTTPS for local development:
+## 🚀 Schnellstart (Installation & Betrieb)
 
-#### Option A: Using [portless](https://github.com/vercel-labs/portless) (Recommended)
+Voraussetzungen: Docker und Docker Compose auf deinem ThinkPad (WSL) installiert.
 
-Portless gives you stable, named `.localhost` URLs with automatic HTTPS/HTTP2 — no manual cert generation or hosts file editing.
-
-```bash
-npm install -g portless
-```
-
-One-time setup (generates and trusts certs automatically):
-
-```bash
-portless proxy start --https
-```
-
-Update your `package.json` dev script:
-
-```json
-{
-  "scripts": {
-    "dev": "portless run next dev"
-  }
-}
-```
-
-Then run:
-
-```bash
-pnpm dev
-# -> https://fanvue-app-starter.localhost
-```
-
-Now set your redirect URI in the Fanvue UI to match:
-
-```
-https://fanvue-app-starter.localhost/api/oauth/callback
-```
-
-#### Option B: Manual mkcert + local-ssl-proxy
-
-Insert the actual name of your app instead of `[your-app-name-here]`
-
-Install mkcert and generate certificates
-
-```
-brew install mkcert
-mkcert -install
-mkcert [your-app-name-here].dev
-```
-
-Change your hosts file
-
-```
-echo "127.0.0.1 [your-app-name-here].dev" | sudo tee -a /etc/hosts
-```
-
-Then run the local SSL proxy
-
-```
-npx local-ssl-proxy --source 3001 --target 3000 --cert ./[your-app-name-here].dev.pem --key ./[your-app-name-here].dev-key.pem
-```
-
-Now setup your redirect URI in the Fanvue UI to match:
-
-```
-https://[your-app-name-here].dev:3001/api/oauth/callback
-```
-
-## Environment variables (.env)
-
-### Get your Fanvue OAuth credentials
-
-1. Visit [Fanvue Developer Area](https://fanvue.com/developers)
-2. Create a new App to obtain your Client ID and Client Secret
-3. Configure a Redirect URI
-   - Development: `http://localhost:3000/api/oauth/callback`
-   - Production: `https://YOUR_DOMAIN/api/oauth/callback`
-4. Configure scopes
-   - For this starter, you need: `read:self`
-   - The scopes you set in your `.env` must exactly match what you select in the Fanvue developer UI for your app
-   - Note: The app automatically includes required system scopes (`openid`, `offline_access`, `offline`) in addition to what you set in `OAUTH_SCOPES`
-
-Required variables
-
-- `OAUTH_CLIENT_ID`: From your Fanvue app
-- `OAUTH_CLIENT_SECRET`: From your Fanvue app
-- `OAUTH_SCOPES`: App scopes selected in the Fanvue UI (e.g. `read:self`)
-- `OAUTH_REDIRECT_URI`: Full URL to `/api/oauth/callback` for your environment
-- `SESSION_SECRET`: A random string of at least 16 characters
-- `SESSION_COOKIE_NAME` (default: `fanvue_oauth`)
-
-These are not something you should change
-
-- `OAUTH_ISSUER_BASE_URL` (default: `https://auth.fanvue.com`)
-- `API_BASE_URL` (default: `https://api.fanvue.com`)
-
-Example `.env.local` (development)
-
-```bash
-OAUTH_CLIENT_ID=YOUR_CLIENT_ID
-OAUTH_CLIENT_SECRET=YOUR_CLIENT_SECRET
-OAUTH_SCOPES=read:self
-OAUTH_REDIRECT_URI=http://localhost:3000/api/oauth/callback
-SESSION_SECRET=use-a-random-16-char-secret
-OAUTH_ISSUER_BASE_URL=https://auth.fanvue.com
-API_BASE_URL=https://api.fanvue.com
-SESSION_COOKIE_NAME=fanvue_oauth
-```
-
-## Production deployment
-
-- Set the same environment variables in your hosting provider for production
-- Ensure the Fanvue app has the production Redirect URI configured: `https://YOUR_DOMAIN/api/oauth/callback`
-- Ensure `OAUTH_SCOPES` exactly matches your selected scopes (e.g. `read:self`)
-- Build and run
-
-```bash
-pnpm install
-pnpm build
-pnpm start
-```
-
-### Recommended Services
-
-To deploy, we recommend using [Vercel](https://vercel.com/)
-
-If you need a database, [Supabase](https://supabase.com/) should have you covered
-
-Usage
-
-- Visit `/` and click “Login with Fanvue”
-- After OAuth, your Fanvue current user JSON is shown
-- Click “Logout” to clear the session
-
-Docs
-
-- Fanvue API: [https://api.fanvue.com/docs](https://api.fanvue.com/docs)
+1. **Repository klonen / Ordner öffnen** im Terminal.
+2. **Abhängigkeiten & Skripte prüfen**, dass alle `.py` und `.json` Dateien im Hauptverzeichnis liegen.
+3. **Docker-Container starten:**
+   ```bash
+   docker compose up --build -d
