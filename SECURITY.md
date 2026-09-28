@@ -1,21 +1,22 @@
-# Security Policy
+# Sicherheitsrichtlinie (Security Policy)
 
-## Supported Versions
+Vielen Dank, dass Sie zur Sicherheit von **Sky OS – Das Framework** beitragen. Da dieses System auf absolute Datensouveränität und lokale Ausführung ausgelegt ist, nehmen wir Sicherheit sehr ernst.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+## 🛡️ Unterstützte Versionen
+Da sich Sky OS in der aktiven Entwicklung befindet, wird Support und Sicherheitsupdates primär für den `main`-Branch bereitgestellt.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Unterstützt |
+| ------- | ----------- |
+| 4.x     | ✅ Ja       |
+| < 4.0   | ❌ Nein     |
 
-## Reporting a Vulnerability
+## 🚨 Meldung einer Sicherheitslücke (Vulnerability)
+Wenn Sie eine Sicherheitslücke entdecken, möchten wir sicherstellen, dass sie verantwortungsvoll behoben werden kann, bevor sie öffentlich wird.
 
-Use this section to tell people how to report a vulnerability.
+* **Bitte erstellen Sie KEINE öffentlichen GitHub-Issues** für sicherheitsrelevante Funde.
+* Melten Sie Sicherheitslücken stattdessen direkt über einen privaten Kommunikationskanal oder per E-Mail an den Repository-Maintainer.
+* Bitte fügen Sie eine detaillierte Beschreibung des Problems, Schritte zur Reproduktion sowie mögliche Lösungsvorschläge bei.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+## 🔒 Lokales Sicherheitsmodell
+* **Keine Cloud-Abhängigkeit:** Sky OS läuft lokal auf Ihrer Hardware (z. B. Lenovo ThinkPad unter WSL). Sensible Daten und das quantensichere Ledger (`audit_quantum_ledger.json`) bleiben isoliert auf Ihrem System.
+* **Kryptografische Integrität:** Alle Systemereignisse und Transaktionen werden über SHA3-256 Hash-Ketten mathematisch versiegelt.
