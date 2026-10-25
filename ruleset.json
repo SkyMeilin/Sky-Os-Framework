@@ -1,0 +1,32 @@
+{
+  "system": "Sky OS – Das Framework",
+  "version": "4.0.0",
+  "ruleset_scope": "Global Operational Guidelines",
+  "core_rules": {
+    "data_privacy": {
+      "mode": "offline_first",
+      "external_cloud_sync": false,
+      "storage_backend": "local_filesystem_wsl"
+    },
+    "security_and_audit": {
+      "ledger_enforcement": true,
+      "hash_algorithm": "SHA3-256",
+      "immutable_trail": "audit_quantum_ledger.json"
+    },
+    "execution_governance": {
+      "triple_core_validation": true,
+      "manual_hardware_veto": true,
+      "fallback_logic": "step_back_and_verify"
+    },
+    "department_integration": {
+      "protocol": "MCP + CIP",
+      "strict_hierarchy": true,
+      "cross_department_logging": true
+    },
+    "commercial_compliance": {
+      "payment_gateways": ["paypal", "venmo", "revolut"],
+      "automatic_ledger_trigger": true,
+      "tax_jurisdiction": "germany_local"
+    }
+  }
+}
