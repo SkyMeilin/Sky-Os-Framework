@@ -4,8 +4,21 @@
   "description": "Optionales Frontend- und UI-Subsystem für Sky OS – Das Framework",
   "private": true,
   "scripts": {
-    "dev": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
-    "build": "tailwindcss -i ./src/input.css -o ./dist/output.css --minify"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "jose": "^6.1.0",
+    "next": "16.2.11",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "zod": "^4.1.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
