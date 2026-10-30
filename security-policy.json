@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "workspace": "Sky-Os-Framework",
+  "security_mode": "local_hardened",
+  "rules": {
+    "block_hardcoded_secrets": true,
+    "enforce_local_sandbox": true,
+    "allowed_execution_paths": [
+      "Sky-Os-Framework",
+      "Sky-Os-Framework/src",
+      "Sky-Os-Framework/flutter-app"
+    ],
+    "pii_masking": true
+  }
+}

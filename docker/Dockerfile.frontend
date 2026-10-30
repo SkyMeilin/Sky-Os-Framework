@@ -1,0 +1,18 @@
+# SkyOS Open Core - Frontend Dockerfile
+# Node.js based React frontend
+
+FROM node:20-alpine AS builder
+
+WORKDIR /build
+COPY frontend_web/package*.json ./
+RUN npm ci
+COPY frontend_web/ .
+RUN npm run build
+
+# Serve with nginx
+FROM nginx:alpine
+COPY --from=builder /build/build /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

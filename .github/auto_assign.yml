@@ -1,0 +1,10 @@
+# .github/auto_assign.yml - Configuration for auto-assign-action
+addAssignees: true
+addReviewers: false
+
+# Assignees to automatically add to new Pull Requests
+assignees:
+  - Pascal
+
+# Number of assignees to prompt
+numberOfAssignees: 1

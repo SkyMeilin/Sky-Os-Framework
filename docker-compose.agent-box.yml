@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # 1. Local LLM Inference Engine
+  ollama:
+    image: ollama/ollama:latest
+    container_name: skyos_agent_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Agent-in-a-Box Gateway & MCP Client
+  agent_gateway:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.distroless
+    container_name: skyos_agent_gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - MODEL_NAME=deepseek-r1:1.5b
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      ollama:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  ollama_data:
+    driver: local

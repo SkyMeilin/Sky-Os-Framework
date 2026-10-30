@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Sky-Os-Framework.iml" filepath="$PROJECT_DIR$/.idea/Sky-Os-Framework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/skyos-open-core-backend.iml" filepath="$PROJECT_DIR$/.idea/skyos-open-core-backend.iml" />
     </modules>
   </component>
 </project>

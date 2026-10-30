@@ -1,0 +1,138 @@
+version: '3.8'
+
+networks:
+  skyos-internal:
+    driver: bridge
+    internal: true
+  skyos-external:
+    driver: bridge
+
+volumes:
+  ollama_data:
+    driver: local
+
+services:
+  # 1. MCP Gateway
+  mcp-gateway:
+    image: skyos/mcp-gateway:v2
+    container_name: mcp-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - skyos-internal
+      - skyos-external
+    depends_on:
+      - core-vault
+      - ollama-engine
+    environment:
+      - PORT=8080
+      - VAULT_URL=http://core-vault:8000
+      - OLLAMA_URL=http://ollama-engine:11434
+      - NODE_ENV=production
+    security_opt:
+      - no-new-privileges:true
+
+  # 2. Core-Vault (Zero-IP-Leakage)
+  core-vault:
+    image: skyos/core-vault:v2
+    container_name: core-vault
+    restart: unless-stopped
+    networks:
+      - skyos-internal
+    volumes:
+      - ./vault/keys:/vault/keys:ro
+      - ./vault/prompts:/vault/prompts:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  # 3. Local Inference Engine (Ollama)
+  ollama-engine:
+    image: ollama/ollama:latest
+    container_name: ollama-engine
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    networks:
+      - skyos-internal
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    security_opt:
+      - no-new-privileges:true
+
+  # 4. AI-Legal-Agent
+  legal-agent:
+    image: skyos/legal-agent:v2
+    container_name: legal-agent
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    networks:
+      - skyos-internal
+      - skyos-external
+    depends_on:
+      - ollama-engine
+      - core-vault
+    environment:
+      - OCR_ENGINE=tesseract
+      - OLLAMA_URL=http://ollama-engine:11434
+    security_opt:
+      - no-new-privileges:true
+
+  # 5. Fanvue & Social Media Agent
+  fanvue-agent:
+    image: skyos/fanvue-agent:v2
+    container_name: fanvue-agent
+    restart: unless-stopped
+    networks:
+      - skyos-internal
+      - skyos-external
+    depends_on:
+      - mcp-gateway
+    environment:
+      - DYNAMIC_BLUR_ENABLED=true
+      - DYNAMIC_BLUR_MODE=face_sharp_body_pixelated
+    security_opt:
+      - no-new-privileges:true
+
+  # 6. The Shadow Worker
+  shadow-worker:
+    image: skyos/shadow-worker:v2
+    container_name: shadow-worker
+    restart: unless-stopped
+    networks:
+      - skyos-internal
+    volumes:
+      - ./logs:/var/log/skyos:ro
+    environment:
+      - LOG_DIR=/var/log/skyos
+      - AUTOPSY_ENABLED=true
+    security_opt:
+      - no-new-privileges:true
+
+  # 7. Pent-a-Boat Pipeline (Docker-Sock entfernt — Security Hardening)
+  pent-a-boat:
+    image: skyos/pent-a-boat:v2
+    container_name: pent-a-boat
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    networks:
+      - skyos-internal
+    environment:
+      - EMERGENCY_TRIGGER_ENABLED=true
+    security_opt:
+      - no-new-privileges:true

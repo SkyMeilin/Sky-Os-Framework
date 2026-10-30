@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   skyos-network:
     driver: bridge
@@ -10,10 +8,12 @@ services:
     image: python:3.11-slim
     container_name: skyos_chat_ui
     restart: unless-stopped
+    env_file:
+      - .env
     working_dir: /app
     volumes:
       - ./:/app
-    command: python chat_interface.py
+    command: sh -c "pip install -r requirements.txt && python chat_interface.py"
     ports:
       - "7860:7860"
     networks:
@@ -24,10 +24,12 @@ services:
     image: python:3.11-slim
     container_name: skyos_mcp_bridge
     restart: unless-stopped
+    env_file:
+      - .env
     working_dir: /app
     volumes:
       - ./:/app
-    command: uvicorn mcp_server:app --host 0.0.0.0 --port 8001
+    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server:app --host 0.0.0.0 --port 8001"
     ports:
       - "8001:8001"
     networks:
@@ -41,8 +43,106 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
-    command: uvicorn payment_gateway:app --host 0.0.0.0 --port 8002
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn payment_gateway:app --host 0.0.0.0 --port 8002"
     ports:
       - "8002:8002"
+    networks:
+      - skyos-network
+
+  # 4. Security Agent (WORM-Audit, Secret Scanning) auf Port 8003
+  skyos-security:
+    image: python:3.11-slim
+    container_name: skyos_security_agent
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn security_agent:app --host 0.0.0.0 --port 8003"
+    ports:
+      - "8003:8003"
+    networks:
+      - skyos-network
+
+  # 5. MCP v2 (Streaming + NotebookLM Bridge) auf Port 8000
+  skyos-mcp-v2:
+    image: python:3.11-slim
+    container_name: skyos_mcp_v2
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server_v2:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    networks:
+      - skyos-network
+
+  # 6. MCP v3 (v2 + SecurityAgent Integration) auf Port 8004
+  skyos-mcp-v3:
+    image: python:3.11-slim
+    container_name: skyos_mcp_v3
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server_v3:app --host 0.0.0.0 --port 8004"
+    ports:
+      - "8004:8004"
+    networks:
+      - skyos-network
+
+  # 7. Master Nexus Event-Router auf Port 8005
+  skyos-nexus:
+    image: python:3.11-slim
+    container_name: skyos_nexus
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn skyos_master_nexus:app --host 0.0.0.0 --port 8005"
+    ports:
+      - "8005:8005"
+    networks:
+      - skyos-network
+
+  # 8. API Gateway mit Paywall auf Port 8006
+  skyos-gateway:
+    image: python:3.11-slim
+    container_name: skyos_gateway
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command: sh -c "pip install -r requirements.txt && uvicorn app:app --host 0.0.0.0 --port 8006"
+    ports:
+      - "8006:8006"
+    networks:
+      - skyos-network
+
+  # 9. Express.js Bridge zu Ollama auf Port 3000
+  skyos-bridge:
+    image: node:18-slim
+    container_name: skyos_bridge
+    restart: unless-stopped
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: node skyos-bridge.js
+    ports:
+      - "3000:3000"
     networks:
       - skyos-network

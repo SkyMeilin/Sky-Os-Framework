@@ -1,0 +1,30 @@
+name: Close Stale Issues
+
+on:
+  schedule:
+    - cron: '20 16 * * 1' # Jeden Montag um 16:20 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark and close stale issues and PRs
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          days-before-close: 14
+          stale-issue-message: 'Dieses Issue ist seit 30 Tagen inaktiv. Bitte melde dich, wenn du es weiter verfolgen möchtest.'
+          stale-pr-message: 'Dieser PR ist seit 30 Tagen inaktiv. Bitte melde dich, wenn du ihn weiter verfolgen möchtest.'
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'never-stale, pinned'
+          exempt-pr-labels: 'never-stale, pinned'
+          exempt-draft-pr: true
+          operations-per-run: 300

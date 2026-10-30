@@ -1,0 +1,26 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docker/**'
+      - 'backend_python/**'
+      - 'frontend_web/**'
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Backend Image
+        run: docker build -f docker/Dockerfile.backend -t skyos-backend .
+
+      - name: Build Frontend Image
+        run: docker build -f docker/Dockerfile.frontend -t skyos-frontend .
+
+      - name: Validate Docker Compose
+        run: docker compose -f docker/docker-compose.yml config

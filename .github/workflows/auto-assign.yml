@@ -1,0 +1,15 @@
+name: Auto Assign Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, master]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto Assign Reviewers and Assignees
+        uses: actions/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/auto_assign.yml'

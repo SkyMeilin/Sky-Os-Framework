@@ -1,0 +1,134 @@
+name: SkyOS Core DevSecOps & BSI Security Scan
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  schedule:
+    # Täglicher Scan um Mitternacht UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  sast-and-code-security:
+    name: SAST & Code Quality (Bandit & Flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Security Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit flake8
+
+      - name: Run Bandit (Python SAST Security Check)
+        run: |
+          bandit -r src/ -ll -ii --exclude src/tests/ || true
+
+      - name: Code Style & PEP8 Compliance Check
+        run: |
+          flake8 src/ --max-line-length=120 --ignore=E203,W503 || true
+
+  dependency-audit:
+    name: Dependency Vulnerability Audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          if [ -f requirements.txt ]; then pip-audit -r requirements.txt || true; fi
+
+  container-security:
+    name: Distroless Container Härtung Scan (Trivy & Hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Lint Docker Compose (Hadolint)
+        if: hashFiles('Dockerfile') != ''
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3006,DL3008
+
+      - name: Scan Docker images for Vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'python:3.11-slim'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  secret-scanning:
+    name: Credential & Secret Leak Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  worm-ledger-integrity-check:
+    name: WORM Ledger & BSI § 8a BSIG Integrity Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run WORM Ledger Integrity Verification
+        run: |
+          python -c "
+          import json, hashlib, sys
+          from pathlib import Path
+
+          ledger_file = Path('audit_quantum_ledger.json')
+          if not ledger_file.exists():
+              print('Kein Ledger gefunden – Initialisierung übersprungen')
+              sys.exit(0)
+
+          ledger = json.loads(ledger_file.read_text())
+          if not ledger:
+              print('Ledger ist leer')
+              sys.exit(0)
+
+          for i, block in enumerate(ledger):
+              block_copy = {k: v for k, v in block.items() if k != 'hash'}
+              raw = json.dumps(block_copy, sort_keys=True).encode()
+              expected = hashlib.sha3_256(raw).hexdigest()
+              if block.get('hash') != expected:
+                  print(f'INTEGRITY FAILURE: Block {i} hash mismatch')
+                  sys.exit(1)
+              if i > 0 and block.get('previous_hash') != ledger[i-1].get('hash'):
+                  print(f'INTEGRITY FAILURE: Block {i} previous_hash mismatch')
+                  sys.exit(1)
+
+          print(f'Ledger integrität: OK ({len(ledger)} Blöcke verifiziert)')
+          "

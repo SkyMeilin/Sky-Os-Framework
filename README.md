@@ -29,6 +29,7 @@ Das System ist in 15 spezialisierte Fachbereiche unterteilt, die jeweils von ein
 * **Quantensicheres Audit-Ledger (`quantum_ledger.py`):** Jede Transaktion, jeder Befehl und jedes Event wird per **SHA3-256** in einer unveränderbaren Hash-Kette mathematisch versiegelt.
 * **Sovereign Payment Gateway:** Direkte, eigenständige Webhook-Anbindungen für **PayPal, Venmo und Revolut** ohne versteckte Zwischenhändler.
 * **Dual-Interface:** Wahlfreiheit zwischen dem lokalen Web-Chat-Interface (Port `7860`) und der mobilen Anbindung per MCP-Brücke (Port `8001`).
+* **GitHub App "sicherheitscontainer":** Automatisierte Security Scans (Bandit, Gitleaks, Trivy) und WORM-Ledger-Validierung via CI/CD – [Details in SECURITY.md](SECURITY.md).
 
 ---
 
