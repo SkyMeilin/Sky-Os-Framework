@@ -1,6 +1,18 @@
+version: '3.8'
+
 networks:
   skyos-network:
     driver: bridge
+
+# Gemeinsame Security-Profile für Container-Härtung (SkyOS 5 Grundsäulen, Säule 1)
+x-security-profile: &security-profile
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 services:
   # 1. Lokales Web-Chat-Interface (UI/UX) auf Port 7860
@@ -8,12 +20,13 @@ services:
     image: python:3.11-slim
     container_name: skyos_chat_ui
     restart: unless-stopped
-    env_file:
-      - .env
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    command: sh -c "pip install -r requirements.txt && python chat_interface.py"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && python chat_interface.py"
     ports:
       - "7860:7860"
     networks:
@@ -24,14 +37,17 @@ services:
     image: python:3.11-slim
     container_name: skyos_mcp_bridge
     restart: unless-stopped
-    env_file:
-      - .env
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server:app --host 0.0.0.0 --port 8001"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn mcp_server:app --host 0.0.0.0 --port 8001"
     ports:
       - "8001:8001"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
     networks:
       - skyos-network
 
@@ -40,109 +56,175 @@ services:
     image: python:3.11-slim
     container_name: skyos_payment_gateway
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn payment_gateway:app --host 0.0.0.0 --port 8002"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn payment_gateway:app --host 0.0.0.0 --port 8002"
     ports:
       - "8002:8002"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
+      - PAYPAL_WEBHOOK_SECRET=${PAYPAL_WEBHOOK_SECRET}
+      - REVOLUT_WEBHOOK_SECRET=${REVOLUT_WEBHOOK_SECRET}
     networks:
       - skyos-network
 
-  # 4. Security Agent (WORM-Audit, Secret Scanning) auf Port 8003
+  # 4. SkyOS Bridge – Express.js Brücke zu Ollama LLM auf Port 3000
+  skyos-bridge:
+    image: node:20-slim
+    container_name: skyos_bridge
+    restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
+    working_dir: /app
+    volumes:
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - ./node_modules:/app/node_modules:ro
+      - ./skyos-bridge.js:/app/skyos-bridge.js:ro
+    command: node skyos-bridge.js
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - PORT=3000
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
+    ports:
+      - "3000:3000"
+    networks:
+      - skyos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 5. Discord Support-Bot – Ollama-gestützter Support-Chatbot
+  skyos-discord:
+    image: node:20-slim
+    container_name: skyos_discord_bot
+    restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
+    working_dir: /app
+    volumes:
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - ./node_modules:/app/node_modules:ro
+      - ./discord-bot.js:/app/discord-bot.js:ro
+    command: node discord-bot.js
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3
+    networks:
+      - skyos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 6. Security Agent – Repository Monitoring, Secret Scanning, WORM Integrity Audit auf Port 8003
   skyos-security:
     image: python:3.11-slim
     container_name: skyos_security_agent
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn security_agent:app --host 0.0.0.0 --port 8003"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn security_agent:app --host 0.0.0.0 --port 8003"
     ports:
       - "8003:8003"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
     networks:
       - skyos-network
 
-  # 5. MCP v2 (Streaming + NotebookLM Bridge) auf Port 8000
+  # 7. MCP Server v2 – Streaming, NotebookLM Bridge, WordPress Publishing auf Port 8000
   skyos-mcp-v2:
     image: python:3.11-slim
     container_name: skyos_mcp_v2
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server_v2:app --host 0.0.0.0 --port 8000"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn mcp_server_v2:app --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+      - WORDPRESS_URL=http://wordpress:8080/wp-json/wp/v2/posts
+      - WORDPRESS_USER=${WORDPRESS_USER}
+      - WORDPRESS_PASSWORD=${WORDPRESS_PASSWORD}
     networks:
       - skyos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # 6. MCP v3 (v2 + SecurityAgent Integration) auf Port 8004
+  # 8. MCP Server v3 – v2 + SecurityAgent Integration auf Port 8004
   skyos-mcp-v3:
     image: python:3.11-slim
     container_name: skyos_mcp_v3
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn mcp_server_v3:app --host 0.0.0.0 --port 8004"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn mcp_server_v3:app --host 0.0.0.0 --port 8004"
     ports:
       - "8004:8004"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+      - WORDPRESS_URL=http://wordpress:8080/wp-json/wp/v2/posts
+      - WORDPRESS_USER=${WORDPRESS_USER}
+      - WORDPRESS_PASSWORD=${WORDPRESS_PASSWORD}
+      - REPO_PATH=/app
     networks:
       - skyos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # 7. Master Nexus Event-Router auf Port 8005
+  # 9. SkyOS Master Nexus – Zentraler Event-Router & Webhook Hub auf Port 8005
   skyos-nexus:
     image: python:3.11-slim
-    container_name: skyos_nexus
+    container_name: skyos_master_nexus
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn skyos_master_nexus:app --host 0.0.0.0 --port 8005"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn skyos_master_nexus:app --host 0.0.0.0 --port 8005"
     ports:
       - "8005:8005"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
+      - SKYOS_WEBHOOK_SECRET=${SKYOS_WEBHOOK_SECRET}
     networks:
       - skyos-network
 
-  # 8. API Gateway mit Paywall auf Port 8006
+  # 10. SkyOS API Gateway – Paywall-geschützter Avatar & Translation Service auf Port 8006
   skyos-gateway:
     image: python:3.11-slim
-    container_name: skyos_gateway
+    container_name: skyos_api_gateway
     restart: unless-stopped
+    <<: *security-profile
+    user: "65532:65532"
     working_dir: /app
     volumes:
-      - ./:/app
-    env_file:
-      - .env
-    command: sh -c "pip install -r requirements.txt && uvicorn app:app --host 0.0.0.0 --port 8006"
+      - ./:/app:ro
+    command: >
+      sh -c "pip install -r requirements.txt && uvicorn app:app --host 0.0.0.0 --port 8006"
     ports:
       - "8006:8006"
-    networks:
-      - skyos-network
-
-  # 9. Express.js Bridge zu Ollama auf Port 3000
-  skyos-bridge:
-    image: node:18-slim
-    container_name: skyos_bridge
-    restart: unless-stopped
-    env_file:
-      - .env
-    working_dir: /app
-    volumes:
-      - ./:/app
-    command: node skyos-bridge.js
-    ports:
-      - "3000:3000"
+    environment:
+      - SKYOS_API_KEY=${SKYOS_API_KEY}
     networks:
       - skyos-network

@@ -1,10 +1,11 @@
+import os
 import requests
 import json
 from quantum_ledger import append_audit_entry
 
-WP_URL = "https://deine-wordpress-domain.com/wp-json/wp/v2/posts"
-WP_USER = "dein_wp_benutzer"
-WP_APP_PASSWORD = "dein_wp_application_password"
+WP_URL = os.getenv("WORDPRESS_URL", "https://deine-wordpress-domain.com/wp-json/wp/v2/posts")
+WP_USER = os.getenv("WORDPRESS_USER", "dein_wp_benutzer")
+WP_APP_PASSWORD = os.getenv("WORDPRESS_APP_PASSWORD", "dein_wp_application_password")
 
 def publish_content_to_wordpress(title, content_html, tags=[]):
     headers = {"Content-Type": "application/json"}

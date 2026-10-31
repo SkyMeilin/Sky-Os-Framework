@@ -1,58 +1,74 @@
-# Sicherheitsrichtlinie (Security Policy)
+# SkyOS Security Policy & Audit Richtlinie
 
-Vielen Dank, dass Sie zur Sicherheit von **Sky OS – Das Framework** beitragen. Da dieses System auf absolute Datensouveränität und lokale Ausführung ausgelegt ist, nehmen wir Sicherheit sehr ernst.
+Vielen Dank, dass Sie zur Sicherheit von **Sky OS – Das Framework** beitragen. Da dieses System auf absolute Datensouveränität, lokale Ausführung und WORM-Compliance ausgelegt ist, nehmen wir Sicherheit sehr ernst.
 
 ## 🛡️ Unterstützte Versionen
-Da sich Sky OS in der aktiven Entwicklung befindet, wird Support und Sicherheitsupdates primär für den `main`-Branch bereitgestellt.
 
-| Version | Unterstützt |
-| ------- | ----------- |
-| 4.x     | ✅ Ja       |
-| < 4.0   | ❌ Nein     |
+SkyOS verwendet strikte Sicherheits- und Audit-Standards. Sicherheitspatches und WORM-Compliance-Updates werden ausschließlich für die aktiven Produktions- und Hauptversionen bereitgestellt.
 
-## 🚨 Meldung einer Sicherheitslücke (Vulnerability)
-Wenn Sie eine Sicherheitslücke entdecken, möchten wir sicherstellen, dass sie verantwortungsvoll behoben werden kann, bevor sie öffentlich wird.
+| Version | Core Architecture | Supported | Audit & WORM |
+| ------- | ---------------- | --------- | ------------ |
+| 4.x.x   | SkyOS Core (FastAPI / Flutter / Discord / MCP) | :white_check_mark: | Full Audit Support |
+| < 4.0   | Legacy / Prototype Phase | :x: | Non-Compliant / Deprecated |
 
-* **Bitte erstellen Sie KEINE öffentlichen GitHub-Issues** für sicherheitsrelevante Funde.
-* Melten Sie Sicherheitslücken stattdessen direkt über einen privaten Kommunikationskanal oder per E-Mail an den Repository-Maintainer.
-* Bitte fügen Sie eine detaillierte Beschreibung des Problems, Schritte zur Reproduktion sowie mögliche Lösungsvorschläge bei.
+---
 
-## 🔒 Lokales Sicherheitsmodell
-* **Keine Cloud-Abhängigkeit:** Sky OS läuft lokal auf Ihrer Hardware (z. B. Lenovo ThinkPad unter WSL). Sensible Daten und das quantensichere Ledger (`audit_quantum_ledger.json`) bleiben isoliert auf Ihrem System.
-* **Kryptografische Integrität:** Alle Systemereignisse und Transaktionen werden über SHA3-256 Hash-Ketten mathematisch versiegelt.
+## Sicherheitsarchitektur & Compliance Guidelines
 
-## 🤖 GitHub App: "sicherheitscontainer"
+1. **Workspace Isolation:**
+   - Der primäre Ausführungspfad ist isoliert. Direkte Pfad-Skripte oder uneingeschränkte Dateizugriffe außerhalb des deklarierten Workspaces sind strikt untersagt.
 
-Sky OS nutzt die GitHub App **sicherheitscontainer** (App ID: `4827720`) für automatisierte Sicherheitsprüfungen und CI/CD-Integration.
+2. **WORM-Audit-Logging (Write Once, Read Many):**
+   - Alle sicherheits- und systemrelevanten Ereignisse werden unveränderbar protokolliert (`quantum_ledger.py`, Ledger unter `audit_quantum_ledger.json`).
+   - Manipulationen an Protokolldateien lösen automatische Guard-Alerts aus.
+   - Hash-Integrität wird per **SHA3-256** in der CI-Pipeline validiert.
 
-### App-Details
-* **Name:** sicherheitscontainer
-* **App ID:** 4827720
-* **Owner:** @SkyMeilin
-* **Einstellungen:** [GitHub Apps Settings](https://github.com/settings/apps/sicherheitscontainer)
+3. **Messenger & API Isolation:**
+   - Externe Steuerung erfolgt ausschließlich über die verifizierte Discord-Bot-API (`discord-bot.js`) und MCP-Server (`mcp_server.py`).
+   - Veraltete oder unverschlüsselte Messenger-Schnittstellen sind deaktiviert.
 
-### Berechtigungen & Scopes
-Die App verfügt über folgende Berechtigungen:
-* **Repository-Zugriff:** Volle Kontrolle über private Repositories (für Security Scans und Code Analysis)
-* **GitHub Actions:** Ausführen von Security-Workflows (Bandit, Gitleaks, Trivy)
-* **WORM-Ledger:** Integritätsprüfung des PostgreSQL Audit-Ledgers via CI/CD
+4. **Secrets & API-Key Management:**
+   - API-Schlüssel dürfen niemals in Repositories eingecheckt werden.
+   - Es müssen ausschließlich `.env`-Dateien oder Umgebungsvariablen verwendet werden.
+   - `.env` und `*.pem`/`*.key` Dateien sind in `.gitignore` geschützt.
 
-### Verwendung
-Die App wird verwendet für:
-1. **Automatisierte Security Scans** – SAST (Static Application Security Testing) bei jedem Push/PR
-2. **Secret Detection** – Gitleaks-Scans verhindern das Commiten von API-Keys oder Tokens
-3. **Container-Sicherheit** – Trivy-Scans für Docker-Images vor dem Deploy
-4. **WORM-Ledger Validierung** – SHA-256 Hash-Kette wird in CI validiert
+5. **Keine Cloud-Abhängigkeit:**
+   - Sky OS läuft lokal auf Ihrer Hardware. Sensible Daten und das quantensichere Ledger bleiben isoliert auf Ihrem System.
 
-### Konfiguration
-Die App-Credentials werden über Umgebungsvariablen verwaltet:
-```env
-GITHUB_OAUTH_APP_ID=4827720
-GITHUB_OAUTH_CLIENT_ID=DEIN_CLIENT_ID_HIER
-GITHUB_OAUTH_CLIENT_SECRET=DEIN_CLIENT_SECRET_HIER
-```
+---
 
-### Sicherheitshinweise
-* Die Client-ID und das Client-Secret sollten niemals öffentlich geteilt werden.
-* Installation Tokens werden nur für die Dauer der CI/CD-Pipeline generiert.
-* Die App folgt dem Principle of Least Privilege – nur notwendige Berechtigungen sind aktiviert.
+## 🚨 Meldung von Sicherheitslücken (Reporting a Vulnerability)
+
+Sicherheitslücken, unbefugte Zugriffsmöglichkeiten oder Compliance-Abweichungen müssen umgehend gemeldet werden.
+
+1. **Meldeweg:**
+   - Bitte melde potenzielle Schwachstellen per privatem Ticket an den System-Architekten (Sky Meilin / Pascal) oder direkt über das interne Discord Security-Audit-Overlay.
+   - **Bitte erstelle keine öffentlichen Issues auf GitHub** für nicht gepatchte Sicherheitslücken.
+
+2. **Reaktionszeiten:**
+   - **Erstbestätigung:** Innerhalb von 24 Stunden.
+   - **Bewertung & Triage:** Innerhalb von 48 Stunden.
+   - **Fix & Patch-Deployment:** Je nach Schweregrad (Kritisch: < 24h, Mittel: < 7 Tage).
+
+3. **Inhalt der Meldung:**
+   - Betroffene Komponente / Pfad (z. B. API, MCP Server, Discord Bot).
+   - Schritte zur Reproduktion der Schwachstelle (Proof of Concept).
+   - Mögliche Auswirkungen auf das WORM-Audit-System oder gespeicherte Daten.
+
+---
+
+## Automatisierte Sicherheitsprüfungen
+
+Vor jedem Commit oder Deployment greifen automatische Guard-Checks in der CI/CD-Pipeline:
+
+- **Dependency Scan:** Prüfung aller Python (`pip-audit`) und Node.js Dependencies auf bekannte Lücken.
+- **SAST (Static Analysis):** Bandit-Scan für Python-Code-Schwachstellen.
+- **Secret Scanning:** Gitleaks scannt auf versehentlich eingecheckte API-Keys und Secrets.
+- **Container Scan:** Trivy prüft Docker-Images auf Vulnerabilities.
+- **WORM Log Integrity Check:** SHA3-256 Hash-Verifizierung des Audit-Ledgers.
+- **Path Isolation Check:** Strikte Validierung der Systemgrenzen.
+
+---
+
+*Letzte Aktualisierung: Oktober 2026*
+*Autor: Sky Meilin Agent (Security Department)*

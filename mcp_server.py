@@ -1,15 +1,19 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from quantum_ledger import append_audit_entry
+from shared_security import verify_api_key, add_cors_middleware
 
 app = FastAPI(title="Sky OS MCP Bridge", version="4.0.0")
+
+# CORS Middleware — explizite Origin-Liste (kein Wildcard!)
+add_cors_middleware(app)
 
 class MCPToolCall(BaseModel):
     tool_name: str
     arguments: dict
 
 @app.post("/mcp/call")
-def handle_mcp_call(call: MCPToolCall):
+def handle_mcp_call(call: MCPToolCall, api_key: str = Depends(verify_api_key)):
     # Jedes Remote-Kommando vom Smartphone wird im Ledger dokumentiert
     append_audit_entry(f"MCP Befehl via Mobile empfangen: Tool '{call.tool_name}'", actor="Sky-DEV Leader")
     

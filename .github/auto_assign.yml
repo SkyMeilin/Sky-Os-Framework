@@ -4,7 +4,7 @@ addReviewers: false
 
 # Assignees to automatically add to new Pull Requests
 assignees:
-  - Pascal
+  - Sky Meilin
 
 # Number of assignees to prompt
 numberOfAssignees: 1

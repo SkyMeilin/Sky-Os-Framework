@@ -1,20 +1,27 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
-
+name: Feature Request
+about: Vorschlage eine neue Idee oder Funktion für Sky OS Framework
+title: '[FEATURE] '
+labels: ['enhancement']
+assignees: 'Sky_Meilin'
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Problembeschreibung
+Beschreibe klar und präzise, welches Problem diese Feature-Anfrage löst.
+*Beispiel: Ich habe immer Probleme, wenn [...]*
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Gewünschte Lösung
+Beschreibe klar und präzise, was passieren soll.
+*Beispiel: Ich möchte, dass Sky OS [...]*
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Alternative Lösungen
+Beschreibe alternative Lösungen oder Features, die du in Betracht gezogen hast.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## Use Cases
+Beschreibe konkrete Anwendungsfälle, in denen dieses Feature nützlich wäre.
+
+## Technische Hinweise (optional)
+Gibt es technische Einschränkungen, Abhängigkeiten oder Implementierungsideen?
+
+## Zusätzlicher Kontext
+Füge weitere Informationen, Screenshots oder Verweise hinzu.
